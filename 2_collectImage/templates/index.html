@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Collector - Premium</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Custom scrollbar for better look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+
+<body class="bg-slate-900 text-white h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="p-4 flex justify-between items-center z-10 glass border-b border-slate-700 shrink-0">
+        <div class="flex items-center gap-3">
+            <i data-lucide="camera" class="w-8 h-8 text-indigo-400"></i>
+            <h1
+                class="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400 hidden md:block">
+                Image Collector
+            </h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="px-3 py-1.5 rounded-full glass flex items-center gap-2">
+                <i data-lucide="image" class="w-4 h-4 text-slate-400"></i>
+                <span id="captureCount" class="font-mono font-bold text-indigo-300">0</span>
+                <span class="text-sm text-slate-400 hidden sm:inline">images</span>
+            </div>
+            <a href="/gallery"
+                class="px-3 py-1.5 hover:bg-slate-800 rounded-full transition-colors font-medium border border-slate-700 flex items-center gap-2 text-sm">
+                <i data-lucide="grid" class="w-4 h-4 text-slate-400"></i>
+                <span class="hidden sm:inline">Gallery</span>
+            </a>
+            <a href="/download"
+                class="group flex items-center gap-2 px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 rounded-full font-semibold transition-all shadow-lg hover:shadow-indigo-500/30 text-sm">
+                <span>Export</span>
+                <i data-lucide="download" class="w-4 h-4 group-hover:translate-y-0.5 transition-transform"></i>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col md:flex-row gap-4 p-4 min-h-0 container mx-auto max-w-7xl relative z-10">
+
+        <!-- Camera Feed Section (Takes available space) -->
+        <div
+            class="flex-1 relative rounded-2xl overflow-hidden shadow-2xl bg-black border border-slate-700 group flex items-center justify-center">
+            <img src="/video_feed" class="w-full h-full object-contain max-h-full" alt="Camera Feed">
+
+            <!-- Overlay Guide -->
+            <div class="absolute inset-0 border-2 border-dashed border-white/20 pointer-events-none rounded-2xl m-4">
+            </div>
+
+            <div class="absolute top-4 left-4">
+                <span class="px-2 py-1 bg-red-500/80 text-white text-xs font-bold rounded animate-pulse">LIVE</span>
+            </div>
+        </div>
+
+        <!-- Controls & Preview Section (Fixed width on desktop, flexible height) -->
+        <div class="w-full md:w-80 flex flex-col gap-4 shrink-0 h-48 md:h-auto">
+
+            <!-- Actions -->
+            <div class="glass p-4 rounded-2xl flex flex-col gap-2 shrink-0">
+                <button onclick="captureImage()" id="captureBtn"
+                    class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl font-bold text-lg shadow-xl transition-transform active:scale-95 flex flex-col items-center justify-center gap-1">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="aperture" class="w-6 h-6"></i>
+                        <span>CAPTURE</span>
+                    </div>
+                </button>
+                <div class="text-center text-slate-500 text-xs">
+                    Press <span class="text-slate-300 font-mono bg-slate-800 px-1 rounded">SPACE</span> to capture
+                </div>
+            </div>
+
+            <!-- Last Captures List -->
+            <div class="glass p-4 rounded-2xl flex-1 flex flex-col overflow-hidden min-h-0">
+                <div class="flex justify-between items-center mb-2 shrink-0">
+                    <h3 class="text-slate-400 text-xs font-semibold uppercase tracking-wider">Recent Captures</h3>
+                    <span class="text-[10px] text-slate-500">Last 5</span>
+                </div>
+
+                <div class="flex-1 overflow-y-auto space-y-2 pr-1" id="recentList">
+                    <!-- Cards will be injected here -->
+                    <div class="text-center text-slate-600 py-4 text-xs">No captures</div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox"
+        class="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300"
+        onclick="closeLightbox(event)">
+        <div class="relative max-w-5xl w-full max-h-full flex flex-col gap-2">
+            <div class="flex justify-end">
+                <button onclick="closeLightbox(null, true)"
+                    class="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <img id="lightboxImg" src=""
+                class="w-full h-full object-contain max-h-[85vh] rounded-lg shadow-2xl border border-white/10">
+            <div class="text-center">
+                <p id="lightboxCaption" class="text-slate-400 font-mono text-sm"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast"
+        class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-emerald-500/90 text-white px-6 py-3 rounded-full shadow-2xl backdrop-blur-sm transform translate-y-20 transition-transform duration-300 flex items-center gap-3 z-50">
+        <i data-lucide="check-circle" class="w-5 h-5"></i>
+        <span class="font-medium">Image Captured!</span>
+    </div>
+
+    <!-- Background Elements -->
+    <div class="absolute top-0 left-0 w-full h-full -z-0 pointer-events-none">
+        <div class="absolute top-[-10%] right-[-5%] w-96 h-96 bg-purple-600/20 rounded-full blur-[100px]"></div>
+        <div class="absolute bottom-[-10%] left-[-5%] w-96 h-96 bg-indigo-600/20 rounded-full blur-[100px]"></div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        const captureBtn = document.getElementById('captureBtn');
+        const countDisplay = document.getElementById('captureCount');
+        const recentList = document.getElementById('recentList');
+        const toast = document.getElementById('toast');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const lightboxCaption = document.getElementById('lightboxCaption');
+
+        // Initial Load
+        updateStats();
+
+        function updateStats() {
+            fetch('/stats')
+                .then(res => res.json())
+                .then(data => {
+                    countDisplay.innerText = data.count;
+                    updateRecentList();
+                });
+        }
+
+        function showToast(msg = 'Image Captured!') {
+            const toastText = toast.querySelector('span');
+            toastText.innerText = msg;
+            toast.classList.remove('translate-y-20');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20');
+            }, 2000);
+        }
+
+        // Lightbox Functions
+        function openLightbox(url, filename) {
+            lightboxImg.src = url;
+            lightboxCaption.innerText = filename || '';
+            lightbox.classList.remove('hidden');
+            // Trigger reflow
+            void lightbox.offsetWidth;
+            lightbox.classList.remove('opacity-0');
+        }
+
+        function closeLightbox(e, force = false) {
+            if (force || e.target === lightbox) {
+                lightbox.classList.add('opacity-0');
+                setTimeout(() => {
+                    lightbox.classList.add('hidden');
+                    lightboxImg.src = '';
+                }, 300);
+            }
+        }
+
+        async function updateRecentList() {
+            try {
+                const response = await fetch('/recent');
+                const data = await response.json();
+
+                if (data.files && data.files.length > 0) {
+                    recentList.innerHTML = data.files.map(file => {
+                        const date = new Date(file.timestamp * 1000);
+                        const timeStr = date.toLocaleTimeString();
+
+                        return `
+                            <div class="bg-slate-800/50 hover:bg-slate-800 transition-colors p-2 rounded-xl flex items-center gap-3 border border-slate-700/50 group duration-200">
+                                <div class="w-16 h-12 bg-black rounded-lg overflow-hidden shrink-0 border border-slate-700 relative cursor-pointer" onclick="openLightbox('${file.url}', '${file.filename}')">
+                                    <img src="${file.url}" class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                         <i data-lucide="maximize-2" class="w-3 h-3 text-white opacity-0 group-hover:opacity-100"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0 pointer-events-none">
+                                    <div class="text-[10px] text-slate-500 font-mono truncate" title="${file.filename}">${file.filename}</div>
+                                    <div class="text-[10px] text-indigo-300 mt-0.5 flex gap-2">
+                                        <span>${timeStr}</span>
+                                    </div>
+                                </div>
+                                <button onclick="deleteImage('${file.filename}')" class="p-1.5 hover:bg-red-500/20 text-slate-500 hover:text-red-400 rounded-lg transition-colors opacity-0 group-hover:opacity-100">
+                                    <i data-lucide="trash-2" class="w-3 h-3"></i>
+                                </button>
+                            </div>
+                        `;
+                    }).join('');
+                    lucide.createIcons();
+                } else {
+                    recentList.innerHTML = '<div class="text-center text-slate-600 py-8 text-xs">No captures yet</div>';
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function deleteImage(filename) {
+            if (!confirm('Delete this image?')) return;
+            try {
+                const res = await fetch(`/delete/${filename}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    updateStats();
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function captureImage() {
+            // Animation for button
+            captureBtn.classList.add('scale-95');
+            setTimeout(() => captureBtn.classList.remove('scale-95'), 100);
+
+            try {
+                const response = await fetch('/capture', { method: 'POST' });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    // Update Count
+                    countDisplay.innerText = data.count;
+
+                    // Update List
+                    updateRecentList();
+
+                    // Show Notification
+                    showToast();
+                } else {
+                    console.error('Capture failed');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Spacebar to capture
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault(); // Prevent scrolling
+                captureImage();
+            }
+            if (e.key === 'Escape') {
+                closeLightbox(null, true);
+            }
+        });
+    </script>
+</body>
+
+</html>

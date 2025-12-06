@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery - Image Collector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+
+<body class="bg-slate-900 text-white min-h-screen relative flex flex-col">
+
+    <!-- Header -->
+    <header
+        class="p-6 flex justify-between items-center z-10 glass border-b border-slate-700 sticky top-0 bg-slate-900/80 backdrop-blur-md">
+        <div class="flex items-center gap-4">
+            <a href="/" class="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-white">
+                <i data-lucide="arrow-left" class="w-6 h-6"></i>
+            </a>
+            <h1 class="text-2xl font-bold tracking-tight text-white">
+                Gallery
+            </h1>
+        </div>
+        <div class="flex items-center gap-4">
+            <button onclick="deleteAll()"
+                class="px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors font-medium border border-red-500/20 flex items-center gap-2">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                Reset All
+            </button>
+            <div class="px-4 py-2 rounded-full glass flex items-center gap-2">
+                <span id="galleryCount" class="font-mono font-bold text-indigo-300">0</span>
+                <span class="text-sm text-slate-400">images</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Gallery Grid -->
+    <main class="flex-1 p-6 z-10">
+        <div id="galleryGrid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+            <!-- Items injected here -->
+            <div class="col-span-full py-20 text-center text-slate-500">Loading...</div>
+        </div>
+    </main>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox"
+        class="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300"
+        onclick="closeLightbox(event)">
+        <div class="relative max-w-5xl w-full max-h-full flex flex-col gap-2">
+            <div class="flex justify-end">
+                <button onclick="closeLightbox(null, true)"
+                    class="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <img id="lightboxImg" src=""
+                class="w-full h-full object-contain max-h-[85vh] rounded-lg shadow-2xl border border-white/10">
+            <div class="text-center">
+                <p id="lightboxCaption" class="text-slate-400 font-mono text-sm"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        const galleryGrid = document.getElementById('galleryGrid');
+        const countDisplay = document.getElementById('galleryCount');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const lightboxCaption = document.getElementById('lightboxCaption');
+
+        function loadGallery() {
+            fetch('/api/all_files')
+                .then(res => res.json())
+                .then(data => {
+                    countDisplay.innerText = data.files.length;
+
+                    if (data.files.length === 0) {
+                        galleryGrid.innerHTML = `
+                            <div class="col-span-full flex flex-col items-center justify-center py-20 text-slate-500 gap-4">
+                                <i data-lucide="image-off" class="w-16 h-16 opacity-50"></i>
+                                <p>No images found</p>
+                            </div>
+                        `;
+                        lucide.createIcons();
+                        return;
+                    }
+
+                    galleryGrid.innerHTML = data.files.map(file => {
+                        const date = new Date(file.timestamp * 1000);
+                        const timeStr = date.toLocaleString();
+
+                        return `
+                            <div class="group relative aspect-square bg-black rounded-xl overflow-hidden border border-slate-700 shadow-lg cursor-pointer" onclick="openLightbox('${file.url}', '${file.filename}')">
+                                <img src="${file.url}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+                                
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-4">
+                                    <div class="text-xs text-slate-300 font-mono truncate">${file.filename}</div>
+                                    <div class="text-xs text-slate-500">${timeStr}</div>
+                                </div>
+                                
+                                <button onclick="deleteImage(event, '${file.filename}')" class="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 hover:scale-110">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                            </div>
+                        `;
+                    }).join('');
+                    lucide.createIcons();
+                });
+        }
+
+        // Lightbox Functions
+        function openLightbox(url, filename) {
+            lightboxImg.src = url;
+            lightboxCaption.innerText = filename || '';
+            lightbox.classList.remove('hidden');
+            // Trigger reflow
+            void lightbox.offsetWidth;
+            lightbox.classList.remove('opacity-0');
+        }
+
+        function closeLightbox(e, force = false) {
+            if (force || e.target === lightbox) {
+                lightbox.classList.add('opacity-0');
+                setTimeout(() => {
+                    lightbox.classList.add('hidden');
+                    lightboxImg.src = '';
+                }, 300);
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeLightbox(null, true);
+            }
+        });
+
+        async function deleteImage(event, filename) {
+            event.stopPropagation(); // Prevent lightbox opening
+            if (!confirm(`Delete ${filename}?`)) return;
+            try {
+                const res = await fetch(`/delete/${filename}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    loadGallery();
+                } else {
+                    alert('Error deleting file: ' + data.message);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function deleteAll() {
+            if (!confirm('Are you sure you want to delete ALL images? This cannot be undone.')) return;
+            try {
+                const res = await fetch(`/delete_all`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.status === 'success') {
+                    loadGallery();
+                } else {
+                    alert('Error resetting: ' + data.message);
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        loadGallery();
+    </script>
+</body>
+
+</html>
