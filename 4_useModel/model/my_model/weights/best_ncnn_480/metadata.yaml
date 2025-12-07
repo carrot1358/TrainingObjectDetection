@@ -1,0 +1,15 @@
+description: Ultralytics best model trained on /content/datasets/testing-1/data.yaml
+author: Ultralytics
+date: '2025-12-07T12:27:53.974616'
+version: 8.2.103
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 32
+task: detect
+batch: 1
+imgsz:
+- 480
+- 480
+names:
+  0: battery
+  1: motor

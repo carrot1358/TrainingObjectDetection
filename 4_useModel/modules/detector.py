@@ -110,6 +110,8 @@ class ObjectDetector:
             callback (function): ฟังก์ชันที่จะถูกเรียกในแต่ละเฟรม (รับ argument เป็น instance ของ ObjectDetector)
         """
         print("[*] เริ่มจับภาพ (กด Ctrl+C เพื่อหยุด)")
+        prev_time = time.time()
+        fps = 0
         try:
             while True:
                 ret, frame = self.cap.read()
@@ -169,6 +171,15 @@ class ObjectDetector:
                 # upscale กลับเป็นขนาดเต็ม (ถ้าจำเป็น)
                 if annotated.shape[:2] != frame.shape[:2]:
                     annotated = cv2.resize(annotated, (frame.shape[1], frame.shape[0]))
+
+                # คำนวณ FPS
+                curr_time = time.time()
+                fps = 1 / (curr_time - prev_time)
+                prev_time = curr_time
+                
+                # วาด FPS บนภาพ
+                cv2.putText(annotated, f"FPS: {fps:.1f}", (10, 30), 
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
                 if self.show_window:
                     cv2.imshow("Detect (press q to quit)", annotated)

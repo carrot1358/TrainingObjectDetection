@@ -26,10 +26,10 @@ def process_results(detector):
 def main():
     # สามารถปรับค่า config ได้ที่นี่
     detector = ObjectDetector(
-        weights="model/my_model/best.pt",
+        weights="model/my_model/weights/best_ncnn_model",
         cam_index=0,
         imgsz=640,
-        conf_threshold=0.1,
+        conf_threshold=0.7,
         show_window=True,
         debug=True # ตั้งเป็น False ถ้าไม่อยากเห็น log อะไรเลย (นอกจากที่สั่ง print เอง)
     )
