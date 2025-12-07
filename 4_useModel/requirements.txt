@@ -5,10 +5,11 @@ pip>=24.0
 ultralytics>=8.2.0
 
 # OpenCV (headless for Raspberry Pi)
-opencv-python-headless>=4.8.0
+# OpenCV (headless for Raspberry Pi)
+# opencv-python-headless>=4.8.0
 
 # If using GUI (optional)
-# opencv-python>=4.8.0
+opencv-python>=4.8.0
 
 # PyTorch (generic, may require replacement with ARM wheel)
 torch>=2.1.0
