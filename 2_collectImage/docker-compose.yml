@@ -1,0 +1,16 @@
+services:
+  collect-image:
+    build: .
+    container_name: collect-image-app
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist captured images
+      - ./captures:/app/captures
+    devices:
+      # Allow access to camera devices
+      - /dev/video0:/dev/video0
+    privileged: true
+    environment:
+      - TZ=Asia/Bangkok
