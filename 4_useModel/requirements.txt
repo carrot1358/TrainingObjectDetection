@@ -13,3 +13,9 @@ opencv-python-headless>=4.8.0
 # PyTorch (generic, may require replacement with ARM wheel)
 torch>=2.1.0
 torchvision>=0.16.0
+
+
+# TensorFlow (for TFLite models)
+tensorflow
+flatbuffers==24.3.25
+
