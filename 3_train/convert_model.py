@@ -1,11 +1,12 @@
 import shutil
 import os
 from ultralytics import YOLO
+%cd {HOME}
 
 # ========================================
 # Export NCNN หลายขนาด
 # ========================================
-model_path = f'{os.environ["HOME"]}/runs/detect/train/weights/best.pt'
+model_path = f'{HOME}/runs/detect/train/weights/best.pt'
 model = YOLO(model_path)
 base_dir = os.path.dirname(model_path)
 
@@ -23,8 +24,8 @@ for size in [480, 640, 800]:
 # ========================================
 # Zip โฟลเดอร์ weights ทั้งหมด
 # ========================================
-weights_dir = f'{os.environ["HOME"]}/runs/detect/train/weights'
-zip_output = f'{os.environ["HOME"]}/runs/detect/train/weights_exported'
+weights_dir = f'{HOME}/runs/detect/train/weights'
+zip_output = f'{HOME}/runs/detect/train/weights_exported'
 
 shutil.make_archive(zip_output, 'zip', weights_dir)
 print(f"📦 Zip สำเร็จ: {zip_output}.zip")
