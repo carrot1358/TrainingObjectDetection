@@ -2,7 +2,6 @@ services:
   collect-image:
     build: .
     container_name: collect-image-app
-    restart: always
     ports:
       - "8000:8000"
     volumes:
