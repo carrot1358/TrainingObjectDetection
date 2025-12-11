@@ -20,3 +20,4 @@ torchvision>=0.16.0
 tensorflow
 flatbuffers==24.3.25
 
+ncnn
