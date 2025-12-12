@@ -21,3 +21,7 @@ tensorflow
 flatbuffers==24.3.25
 
 ncnn
+
+# GPIO Control for Servo (Raspberry Pi 5 ONLY)
+gpiozero>=2.0
+rpi-lgpio  # Required for Raspberry Pi 5

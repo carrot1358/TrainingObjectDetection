@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.pyc
+
+# Jupyter Notebooks
+.ipynb_checkpoints
+
+# Virtual Environments
+venv/
+env/
+.env
+.venv/
+
+# VS Code
+.vscode/
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# YOLO / Training artifacts
+# Ignore generalized build artifacts and zips
+data.zip
+custom_data/
+runs/
+*.zip
+
+# Ignore broad model extensions (to prevent accidental large file commits)
+# But we will whitelist specific application directories below
+*.pt
+*.tflite
+*.bin
+*.param
+
+# --- Whitelist / Exceptions ---
+# Keep captured images
+!2_collectImage/captures/
+
+# Keep models in 4_useModel (Deeply whitelist extensions inside this specific path)
+!4_useModel/model/
+!4_useModel/model/**/*.pt
+!4_useModel/model/**/*.tflite
+!4_useModel/model/**/*.bin
+!4_useModel/model/**/*.param
